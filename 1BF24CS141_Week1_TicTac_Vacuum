@@ -1,0 +1,112 @@
+import random
+
+class TicTacToe:
+    def __init__(self):
+        self.board = [" "] * 9  # 3x3 board as a list
+        self.current_winner = None
+
+    def print_board(self):
+        """Prints the current board state."""
+        print("\n")
+        for row in [self.board[i*3:(i+1)*3] for i in range(3)]:
+            print(" | ".join(row))
+            if row != self.board[6:]:
+                print("-" * 5)
+        print("\n")
+
+    def available_moves(self):
+        """Returns a list of available positions."""
+        return [i for i, spot in enumerate(self.board) if spot == " "]
+
+    def empty_squares(self):
+        return " " in self.board
+
+    def make_move(self, square, letter):
+        """Places a letter on the board if valid."""
+        if self.board[square] == " ":
+            self.board[square] = letter
+            if self.winner(square, letter):
+                self.current_winner = letter
+            return True
+        return False
+
+    def winner(self, square, letter):
+        """Checks if the current move wins the game."""
+        row_ind = square // 3
+        row = self.board[row_ind*3:(row_ind+1)*3]
+        if all(s == letter for s in row):
+            return True
+
+        col_ind = square % 3
+        col = [self.board[col_ind+i*3] for i in range(3)]
+        if all(s == letter for s in col):
+            return True
+
+        if square % 2 == 0:
+            diagonal1 = [self.board[i] for i in [0, 4, 8]]
+            if all(s == letter for s in diagonal1):
+                return True
+            diagonal2 = [self.board[i] for i in [2, 4, 6]]
+            if all(s == letter for s in diagonal2):
+                return True
+
+        return False
+
+
+def human_move(game, letter):
+    """Handles human player's move with input validation."""
+    valid_square = False
+    val = None
+    while not valid_square:
+        try:
+            square = input(f"Player {letter}, enter your move (1-9): ")
+            val = int(square) - 1
+            if val not in game.available_moves():
+                raise ValueError
+            valid_square = True
+        except ValueError:
+            print("Invalid move. Try again.")
+    return val
+
+
+def computer_move(game, letter):
+    """Simple AI: chooses a random available move."""
+    square = random.choice(game.available_moves())
+    print(f"Computer ({letter}) chooses position {square + 1}")
+    return square
+
+
+def play(game, player1_type="human", player2_type="human"):
+    """Main game loop."""
+    letter = "X"  # Starting letter
+    game.print_board()
+
+    while game.empty_squares():
+        if (letter == "X" and player1_type == "human") or (letter == "O" and player2_type == "human"):
+            square = human_move(game, letter)
+        else:
+            square = computer_move(game, letter)
+
+        if game.make_move(square, letter):
+            game.print_board()
+
+            if game.current_winner:
+                print(f"{letter} wins!")
+                return
+            letter = "O" if letter == "X" else "X"
+
+    print("It's a tie!")
+
+
+if __name__ == "__main__":
+    print("Tic Tac Toe Game")
+    print("1. Human vs Human")
+    print("2. Human vs Computer")
+    choice = input("Choose game mode (1 or 2): ").strip()
+
+    if choice == "1":
+        play(TicTacToe(), "human", "human")
+    elif choice == "2":
+        play(TicTacToe(), "human", "computer")
+    else:
+        print("Invalid choice. Exiting.")
