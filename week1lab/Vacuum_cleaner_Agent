@@ -1,0 +1,62 @@
+# Vacuum Cleaner Agent - Simple Reflex Agent
+# Author: Senior Programming Expert
+# This program simulates a vacuum cleaner in a two-room environment (A and B)
+# The agent decides actions based on the current state (Clean/Dirty)
+
+def get_room_status(room_name):
+    """
+    Prompt user for room status and validate input.
+    Returns 'Clean' or 'Dirty'.
+    """
+    while True:
+        status = input(f"Enter status of Room {room_name} (Clean/Dirty): ").strip().lower()
+        if status in ["clean", "dirty"]:
+            return status.capitalize()
+        else:
+            print("Invalid input. Please enter 'Clean' or 'Dirty'.")
+
+def vacuum_cleaner_agent(room_a_status, room_b_status):
+    """
+    Implements a simple reflex agent for a vacuum cleaner.
+    The agent cleans the current room if dirty, otherwise moves to the other room.
+    """
+    current_room = "A"  # Start in Room A
+    actions = []
+
+    # Room A
+    if current_room == "A":
+        if room_a_status == "Dirty":
+            actions.append("SUCK in Room A")
+            room_a_status = "Clean"
+        actions.append("MOVE to Room B")
+
+    # Room B
+    current_room = "B"
+    if current_room == "B":
+        if room_b_status == "Dirty":
+            actions.append("SUCK in Room B")
+            room_b_status = "Clean"
+
+    return actions, room_a_status, room_b_status
+
+def main():
+    print("=== Vacuum Cleaner Agent Simulation ===")
+
+    # Get room statuses from user
+    room_a_status = get_room_status("A")
+    room_b_status = get_room_status("B")
+
+    # Run the agent
+    actions, final_a_status, final_b_status = vacuum_cleaner_agent(room_a_status, room_b_status)
+
+    # Output results
+    print("\nActions Taken:")
+    for action in actions:
+        print(f"- {action}")
+
+    print("\nFinal Room Statuses:")
+    print(f"Room A: {final_a_status}")
+    print(f"Room B: {final_b_status}")
+
+if __name__ == "__main__":
+    main()
