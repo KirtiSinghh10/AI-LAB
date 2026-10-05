@@ -1,0 +1,92 @@
+import random
+
+def calculate_conflicts(state):
+    """Calculates total conflicting pairs of queens."""
+    conflicts = 0
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            # Check if queens share the same row or the same diagonal
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                conflicts += 1
+    return conflicts
+
+def get_neighbors(state):
+    """Generates all neighboring states by moving one queen inside its column."""
+    neighbors = []
+    n = len(state)
+    for col in range(n):
+        for row in range(n):
+            if state[col] != row:
+                neighbor = list(state)
+                neighbor[col] = row
+                neighbors.append(tuple(neighbor))
+    return neighbors
+
+def print_board(state):
+    """Prints an ASCII matrix representation of the 4x4 board configuration."""
+    n = len(state)
+    for row in range(n):
+        line = []
+        for col in range(n):
+            if state[col] == row:
+                line.append("[👑]")
+            else:
+                line.append("[ . ]")
+        print("  " + " ".join(line))
+    print()
+
+def hill_climbing_search():
+    """Runs Hill Climbing until 9 unique invalid states and all solutions are found."""
+    invalid_collected = set() # Stores unique tuples of (state, conflicts)
+    valid_solutions = set()   # Stores unique solutions
+    
+    # The 4-queens problem has exactly 2 unique solutions globally
+    while len(valid_solutions) < 2 or len(invalid_collected) < 9:
+        # Generate a random initial board configuration
+        current_state = tuple(random.randint(0, 3) for _ in range(4))
+        current_conflicts = calculate_conflicts(current_state)
+        
+        if current_conflicts > 0 and len(invalid_collected) < 9:
+            invalid_collected.add((current_state, current_conflicts))
+            
+        while True:
+            neighbors = get_neighbors(current_state)
+            
+            # Find the neighbor with the minimum conflicts
+            neighbor_evals = [(n, calculate_conflicts(n)) for n in neighbors]
+            best_neighbor, min_conflicts = min(neighbor_evals, key=lambda x: x[1])
+            
+            # Log intermediate steps if they are invalid states
+            if min_conflicts > 0 and len(invalid_collected) < 9:
+                invalid_collected.add((best_neighbor, min_conflicts))
+                
+            # If no better neighbor is found, we hit a peak (local or global optimum)
+            if min_conflicts >= current_conflicts:
+                if current_conflicts == 0:
+                    valid_solutions.add(current_state)
+                elif len(invalid_collected) < 9:
+                    invalid_collected.add((current_state, current_conflicts))
+                break
+                
+            current_state = best_neighbor
+            current_conflicts = min_conflicts
+
+    return list(invalid_collected)[:9], list(valid_solutions)
+
+# Run the algorithm
+invalid_states, valid_states = hill_climbing_search()
+
+# Display Results
+print("=" * 55)
+print("=== AT LEAST 9 INVALID STATES (WITH CONFLICTS) ===")
+print("=" * 55)
+for idx, (state, conf) in enumerate(invalid_states, 1):
+    print(f"{idx}. State Vector: {state} | Total Conflicts: {conf}")
+
+print("\n" + "=" * 55)
+print("=== ALL VALID STATES (SOLUTIONS) VISUALIZED ===")
+print("=" * 55)
+for idx, state in enumerate(valid_states, 1):
+    print(f"Solution {idx}: State Vector {state} | Conflicts: 0")
+    print_board(state)
