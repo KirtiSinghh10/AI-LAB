@@ -1,0 +1,139 @@
+import heapq
+
+class Node:
+    def __init__(self, board, g, h, parent=None, move=""):
+        self.board = board  # 3x3 list representing the board
+        self.g = g          # Cost from start node (number of moves)
+        self.h = h          # Heuristic cost (misplaced tiles or Manhattan distance)
+        self.f = g + h      # Total cost f(n) = g(n) + h(n)
+        self.parent = parent
+        self.move = move
+
+    def __lt__(self, other):
+        return self.f < other.f
+
+# Function to calculate Manhattan Distance heuristic
+def calculate_heuristic(board, goal):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            val = board[i][j]
+            if val != 0:
+                # Find goal position for this value
+                for gi in range(3):
+                    for gj in range(3):
+                        if goal[gi][gj] == val:
+                            distance += abs(i - gi) + abs(j - gj)
+    return distance
+
+# Find coordinates of the blank tile (0)
+def find_blank(board):
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == 0:
+                return i, j
+    return -1, -1
+
+# Generate valid neighboring states
+def get_neighbors(node, goal):
+    neighbors = []
+    x, y = find_blank(node.board)
+    # Directions: Up, Down, Left, Right
+    directions = [(-1, 0, "Up"), (1, 0, "Down"), (0, -1, "Left"), (0, 1, "Right")]
+    
+    for dx, dy, move in directions:
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            # Create a deep copy of the board
+            new_board = [row[:] for row in node.board]
+            # Swap blank with the adjacent tile
+            new_board[x][y], new_board[nx][ny] = new_board[nx][ny], new_board[x][y]
+            
+            g = node.g + 1
+            h = calculate_heuristic(new_board, goal)
+            neighbors.append(Node(new_board, g, h, node, move))
+            
+    return neighbors
+
+# A* Search Algorithm
+def a_star_solve(initial, goal):
+    open_set = []
+    closed_set = set()
+    
+    start_h = calculate_heuristic(initial, goal)
+    start_node = Node(initial, 0, start_h)
+    heapq.heappush(open_set, start_node)
+    
+    while open_set:
+        current = heapq.heappop(open_set)
+        
+        # Check if we reached the goal
+        if current.board == goal:
+            path = []
+            while current.parent:
+                path.append((current.move, current.board))
+                current = current.parent
+            return path[::-1] # Return reversed path
+        
+        closed_set.add(tuple(map(tuple, current.board)))
+        
+        for neighbor in get_neighbors(current, goal):
+            if tuple(map(tuple, neighbor.board)) in closed_set:
+                continue
+            heapq.heappush(open_set, neighbor)
+            
+    return None
+
+# Function to read a 3x3 puzzle grid from user input
+def read_grid(prompt_name):
+    print(f"Enter the 3x3 {prompt_name} row by row (use 0 for the blank tile, separate numbers with spaces):")
+    grid = []
+    for i in range(3):
+        while True:
+            try:
+                row = list(map(int, input(f"Row {i+1}: ").strip().split()))
+                if len(row) == 3:
+                    grid.append(row)
+                    break
+                print("Error: Exactly 3 numbers required per row.")
+            except ValueError:
+                print("Error: Please enter valid integers.")
+    return grid
+
+# Print board state nicely
+def print_board(board):
+    for row in board:
+        print(" ".join(str(x) if x != 0 else "_" for x in row)) # Replaced empty space with '_' for better UI visibility
+    print()
+
+# Main Execution
+if __name__ == "__main__":
+    print("--- 8-Puzzle Solver using A* Algorithm ---")
+    initial_state = read_grid("Initial State")
+    goal_state = read_grid("Final (Goal) State")
+    
+    print("\nInitial State:")
+    print_board(initial_state)
+    print("Goal State:")
+    print_board(goal_state)
+    
+    if initial_state == goal_state:
+        print("The initial state is already at the goal state! Total steps: 0")
+    else:
+        print("Solving... Please wait.")
+        solution_path = a_star_solve(initial_state, goal_state)
+        
+        if solution_path is None:
+            print("No solution exists for the given configuration!")
+        else:
+            # Displays total steps explicitly
+            total_steps = len(solution_path)
+            print(f"==========================================")
+            print(f" SUCCESS: Goal reached!")
+            print(f" Total number of steps taken: {total_steps}")
+            print(f"==========================================\n")
+            
+            # Step-by-step path breakdown
+            for step, (move, board) in enumerate(solution_path, 1):
+                print(f"Step {step} (Move blank {move}):")
+                print_board(board)
