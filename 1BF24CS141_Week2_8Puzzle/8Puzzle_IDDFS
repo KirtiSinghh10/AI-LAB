@@ -1,0 +1,75 @@
+import itertools
+
+# Define the standard targeted goal state (0 represents the empty space)
+GOAL_STATE = (1, 2, 3, 
+              4, 5, 6, 
+              7, 8, 0)
+
+def find_blank(state):
+    """Finds the index of the empty/blank space (0)."""
+    return state.index(0)
+
+def get_successors(state):
+    """Generates valid next states by shifting tiles into the blank space."""
+    successors = []
+    blank = find_blank(state)
+    row, col = blank // 3, blank % 3
+    
+    # Define valid directional moves (row_offset, col_offset, move_name)
+    moves = [(-1, 0, 'UP'), (1, 0, 'DOWN'), (0, -1, 'LEFT'), (0, 1, 'RIGHT')]
+    
+    for r_off, c_off, action in moves:
+        new_row, new_col = row + r_off, col + c_off
+        
+        if 0 <= new_row < 3 and 0 <= new_col < 3:
+            new_blank = new_row * 3 + new_col
+            # Convert to list to mutate/swap values
+            next_state = list(state)
+            next_state[blank], next_state[new_blank] = next_state[new_blank], next_state[blank]
+            successors.append((tuple(next_state), action))
+            
+    return successors
+
+def depth_limited_search(state, goal, limit, path, actions):
+    """Performs depth-limited DFS up to a specified threshold depth limit."""
+    if state == goal:
+        return actions
+    if limit <= 0:
+        return None
+        
+    for next_state, action in get_successors(state):
+        # Prevent immediate cyclic looping by making sure state isn't in current branch
+        if next_state not in path:
+            path.add(next_state)
+            result = depth_limited_search(next_state, goal, limit - 1, path, actions + [action])
+            if result is not None:
+                return result
+            path.remove(next_state) # Backtrack
+            
+    return None
+
+def iddfs(initial_state, goal_state):
+    """Main Iterative Deepening engine that grows depth limits sequentially."""
+    print("Searching for solution via IDDFS...")
+    for depth in itertools.count():
+        # Set up branch tracking for the current iteration
+        path = {initial_state}
+        result = depth_limited_search(initial_state, goal_state, depth, path, [])
+        if result is not None:
+            return result, depth
+            
+# --- Execution Example ---
+if __name__ == "__main__":
+    # Example starting layout configuration
+    # 1 2 3
+    # 4 0 6
+    # 7 5 8
+    start_layout = (1, 2, 3, 
+                    4, 0, 6, 
+                    7, 5, 8)
+                    
+    solution_path, total_depth = iddfs(start_layout, GOAL_STATE)
+    
+    print(\n"--- Solution Found! ---")
+    print(f"Optimal Depth Limit reached: {total_depth}")
+    print(f"Sequence of moves ({len(solution_path)} total steps): {', '.join(solution_path)}")
