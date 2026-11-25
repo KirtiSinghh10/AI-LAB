@@ -1,0 +1,65 @@
+
+# Resolution in First Order Logic
+
+def resolve(c1, c2):
+    for literal in c1:
+        if literal.startswith("~"):
+            complement = literal[1:]
+        else:
+            complement = "~" + literal
+
+        if complement in c2:
+            result = (c1 - {literal}) | (c2 - {complement})
+            return result
+
+    return None
+
+
+# Clauses obtained after CNF conversion
+C1 = {"~Food(Peanuts)", "Likes(John,Peanuts)"}
+C2 = {"~Eats(Anil,Peanuts)", "Killed(Anil)", "Food(Peanuts)"}
+C3 = {"Eats(Anil,Peanuts)"}
+C4 = {"Alive(Anil)"}
+C5 = {"~Alive(Anil)", "~Killed(Anil)"}
+
+# Negation of the goal
+C6 = {"~Likes(John,Peanuts)"}
+
+print("RESOLUTION IN FIRST ORDER LOGIC")
+print("--------------------------------")
+
+print("\nInitial Clauses:")
+for c in [C1, C2, C3, C4, C5, C6]:
+    print(c)
+
+# Step 1: Resolve Alive(Anil)
+r1 = resolve(C4, C5)
+print("\nStep 1: Resolve Alive(Anil)")
+print("Result:", r1)
+
+# Step 2: Resolve Eats(Anil,Peanuts)
+r2 = resolve(C2, C3)
+print("\nStep 2: Resolve Eats(Anil,Peanuts)")
+print("Result:", r2)
+
+# Step 3: Resolve Killed(Anil)
+r3 = resolve(r1, r2)
+print("\nStep 3: Resolve Killed(Anil)")
+print("Result:", r3)
+
+# Step 4: Resolve Food(Peanuts)
+r4 = resolve(r3, C1)
+print("\nStep 4: Resolve Food(Peanuts)")
+print("Result:", r4)
+
+# Step 5: Resolve Likes(John,Peanuts)
+r5 = resolve(r4, C6)
+print("\nStep 5: Resolve Likes(John,Peanuts)")
+print("Result:", r5)
+
+if r5 == set():
+    print("\nEmpty Clause Obtained: {}")
+    print("Contradiction Found!")
+    print("Goal Proved: John Likes Peanuts")
+else:
+    print("\nGoal Could Not Be Proved")
