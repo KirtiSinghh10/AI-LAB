@@ -1,0 +1,85 @@
+
+# Alpha-Beta Pruning Algorithm
+
+pruned = []
+visited = []
+
+def count_leaves(node):
+    if isinstance(node, int):
+        return 1
+    return sum(count_leaves(child) for child in node)
+
+
+def alpha_beta(node, alpha, beta, depth=0, path="Root"):
+
+    if isinstance(node, int):
+        visited.append(node)
+        print("Visited:", node)
+        return node
+
+    maximizing = (depth % 2 == 0)
+
+    if maximizing:
+        value = float('-inf')
+        print("\nMAX Node:", path)
+    else:
+        value = float('inf')
+        print("\nMIN Node:", path)
+
+    for i, child in enumerate(node):
+        new_path = path + "." + str(i + 1)
+
+        result = alpha_beta(
+            child, alpha, beta, depth + 1, new_path
+        )
+
+        if maximizing:
+            value = max(value, result)
+            alpha = max(alpha, value)
+        else:
+            value = min(value, result)
+            beta = min(beta, value)
+
+        if alpha >= beta:
+            print("Cutoff at:", path)
+
+            for j in range(i + 1, len(node)):
+                branch = node[j]
+                pruned.append(count_leaves(branch))
+                print("Pruned:", path + "." + str(j + 1))
+
+            break
+
+    print("Node Value:", value)
+    return value
+
+
+# Game tree from Page 7
+tree = [
+    [
+        [[5, 6], [7, 4, 5]],
+        [[3]]
+    ],
+    [
+        [[6], [6, 9]],
+        [[7]]
+    ],
+    [
+        [[5]],
+        [[9, 8], [6]]
+    ]
+]
+
+print("ALPHA-BETA PRUNING")
+print("-------------------")
+
+result = alpha_beta(
+    tree, float('-inf'), float('inf')
+)
+
+print("\nFinal Root Value:", result)
+print("Visited Leaves:", len(visited))
+print("Pruned Leaves:", sum(pruned))
+print("Total Leaves:", len(visited) + sum(pruned))
+print("Optimal Path: Root -> 2 -> 1 -> 1 -> 1")
+print("Algorithm Completed")
