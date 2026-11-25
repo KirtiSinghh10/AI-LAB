@@ -1,0 +1,60 @@
+
+# Truth Table Enumeration for Propositional Logic
+
+from itertools import product
+
+# Implication operator
+def implies(a, b):
+    return (not a) or b
+
+# Knowledge Base
+def knowledge_base(P, Q, R):
+    return (
+        implies(Q, P)
+        and implies(P, not Q)
+        and (Q or R)
+    )
+
+# Queries
+def query1(P, Q, R):
+    return R
+
+def query2(P, Q, R):
+    return implies(R, P)
+
+def query3(P, Q, R):
+    return implies(Q, R)
+
+# Generate all possible truth assignments
+print("P  Q  R  Q->P  P->~Q  Q|R  KB")
+
+models = []
+
+for P, Q, R in product([False, True], repeat=3):
+
+    q_p = implies(Q, P)
+    p_not_q = implies(P, not Q)
+    q_or_r = Q or R
+
+    kb = knowledge_base(P, Q, R)
+
+    print(P, Q, R, q_p, p_not_q, q_or_r, kb)
+
+    if kb:
+        models.append((P, Q, R))
+
+# Check entailment
+def entails(query):
+    for P, Q, R in models:
+        if not query(P, Q, R):
+            return False
+    return True
+
+print("\nModels of Knowledge Base:", models)
+
+print("\nEntailment Results:")
+print("KB entails R:", entails(query1))
+print("KB entails R -> P:", entails(query2))
+print("KB entails Q -> R:", entails(query3))
+
+print("\nAlgorithm Completed")
