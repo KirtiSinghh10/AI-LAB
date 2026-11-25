@@ -1,0 +1,70 @@
+
+# Forward Chaining in First Order Logic
+
+# Initial Knowledge Base
+facts = {
+    "American(Robert)",
+    "Owns(A,T1)",
+    "Missile(T1)",
+    "Enemy(A,America)"
+}
+
+# Forward Chaining Algorithm
+def forward_chaining(facts):
+    print("Initial Knowledge Base:")
+    for fact in sorted(facts):
+        print(fact)
+
+    print("\nForward Chaining Started")
+
+    while True:
+        new_facts = set()
+
+        # Rule 1: Missile(x) -> Weapon(x)
+        for fact in facts:
+            if fact.startswith("Missile("):
+                x = fact[8:-1]
+                new_facts.add(f"Weapon({x})")
+
+        # Rule 2: Missile(x) AND Owns(A,x)
+        #         -> Sells(Robert,x,A)
+        if "Missile(T1)" in facts and "Owns(A,T1)" in facts:
+            new_facts.add("Sells(Robert,T1,A)")
+
+        # Rule 3: Enemy(x,America) -> Hostile(x)
+        if "Enemy(A,America)" in facts:
+            new_facts.add("Hostile(A)")
+
+        # Rule 4: American(p) AND Weapon(q)
+        # AND Sells(p,q,r) AND Hostile(r)
+        # -> Criminal(p)
+        if ("American(Robert)" in facts
+            and "Weapon(T1)" in facts
+            and "Sells(Robert,T1,A)" in facts
+            and "Hostile(A)" in facts):
+
+            new_facts.add("Criminal(Robert)")
+
+        # Remove already existing facts
+        new_facts -= facts
+
+        if not new_facts:
+            break
+
+        print("\nNew Facts Inferred:")
+        for fact in sorted(new_facts):
+            print(fact)
+
+        facts.update(new_facts)
+
+    print("\nFinal Knowledge Base:")
+    for fact in sorted(facts):
+        print(fact)
+
+    if "Criminal(Robert)" in facts:
+        print("\nGoal Proved: Robert is Criminal")
+    else:
+        print("\nGoal Could Not Be Proved")
+
+
+forward_chaining(facts)
